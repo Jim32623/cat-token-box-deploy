@@ -13,9 +13,8 @@ echo -e "${CYAN}**  自动安装并启动 Fractal 主网节点和铸造工具 **
 echo -e "${CYAN}*********************************************${NC}"
 echo ""
 echo -e "${YELLOW}欢迎使用 CAT Token Box 自动部署脚本${NC}"
-echo "功能1将帮助您快速安装和配置必要的工具并且一键启动，包括 Docker、Node.js、yarn 等。"
-echo "功能2，您可以选择重启铸造窗口以继续操作。"
-echo "特别鸣谢--YIMING--RUN--"
+echo "该脚本将帮助您快速安装和配置必要的工具，包括 Docker、Node.js、yarn 等。"
+echo "此外，您可以选择重启铸造窗口以继续操作。"
 echo ""
 echo -e "${GREEN}请选择一个功能：${NC}"
 
@@ -57,10 +56,13 @@ case $option in
         sudo yarn install
         sudo yarn build
 
-        echo "运行 Fractal 节点..."
+        echo "构建 Docker 镜像..."
         cd ./packages/tracker/
         sudo chmod 777 docker/data
         sudo chmod 777 docker/pgdata
+        sudo docker build -t tracker:latest .   # 本地构建镜像，避免拉取失败
+
+        echo "运行 Fractal 节点..."
         sudo docker-compose up -d
 
         cd ../../
