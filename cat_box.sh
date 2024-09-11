@@ -1,70 +1,85 @@
 #!/bin/bash
 
-# 一键部署脚本 - CAT Protocol on Fractal Mainnet
+# 添加颜色支持
+GREEN='\e[1;32m'
+CYAN='\e[1;36m'
+YELLOW='\e[1;33m'
+NC='\e[0m' # 重置颜色
 
-# 更新系统
-echo "更新系统..."
-sudo apt-get update && sudo apt-get upgrade -y
+# 显示装饰性标题和说明
+echo -e "${CYAN}*********************************************${NC}"
+echo -e "${CYAN}**         CAT Token Box Installer         **${NC}"
+echo -e "${CYAN}**  自动安装并启动 Fractal 主网节点和铸造工具 **${NC}"
+echo -e "${CYAN}*********************************************${NC}"
+echo ""
+echo -e "${YELLOW}欢迎使用 CAT Token Box 自动部署脚本${NC}"
+echo "功能1将帮助您快速安装和配置必要的工具并且一键启动，包括 Docker、Node.js、yarn 等。"
+echo "功能2，您可以选择重启铸造窗口以继续操作。"
+echo "特别鸣谢--YIMING--RUN--"
+echo ""
+echo -e "${GREEN}请选择一个功能：${NC}"
 
-# 安装 Docker
-echo "安装 Docker..."
-sudo apt-get install docker.io -y
+# 功能菜单
+echo "1) 一键安装（包含开启窗口进行重复铸造）"
+echo "2) 重启已开启的重复铸造窗口"
+read -p "请输入选项编号: " option
 
-# 安装最新版本的 docker-compose
-echo "安装 docker-compose..."
-VERSION=$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*\d')
-DESTINATION=/usr/local/bin/docker-compose
-sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
-sudo chmod 755 $DESTINATION
+case $option in
+    1)
+        echo -e "${GREEN}开始一键安装...${NC}"
 
-# 安装 Node.js 和 npm
-echo "安装 Node.js 和 npm..."
-sudo apt-get install npm -y
-sudo npm install n -g
-sudo n stable
+        # 一键安装过程
+        echo "更新系统..."
+        sudo apt-get update && sudo apt-get upgrade -y
 
-# 安装 yarn
-echo "安装 yarn..."
-sudo npm i -g yarn
+        echo "安装 Docker..."
+        sudo apt-get install docker.io -y
 
-# 拉取 Git 仓库
-echo "拉取 Git 仓库..."
-git clone https://github.com/CATProtocol/cat-token-box
-cd cat-token-box
+        echo "安装 docker-compose..."
+        VERSION=$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*\d')
+        DESTINATION=/usr/local/bin/docker-compose
+        sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
+        sudo chmod 755 $DESTINATION
 
-# 安装依赖并编译
-echo "安装依赖并编译项目..."
-sudo yarn install
-sudo yarn build
+        echo "安装 Node.js 和 npm..."
+        sudo apt-get install npm -y
+        sudo npm install n -g
+        sudo n stable
 
-# 运行 Docker 容器
-echo "运行 Fractal 节点..."
-cd ./packages/tracker/
-sudo chmod 777 docker/data
-sudo chmod 777 docker/pgdata
-sudo docker-compose up -d
+        echo "安装 yarn..."
+        sudo npm i -g yarn
 
-# 返回项目根目录并构建 Docker 镜像
-cd ../../
-sudo docker build -t tracker:latest .
+        echo "拉取 Git 仓库..."
+        git clone https://github.com/CATProtocol/cat-token-box
+        cd cat-token-box
 
-# 运行本地索引器
-echo "运行本地索引器..."
-sudo docker run -d \
-    --name tracker \
-    --add-host="host.docker.internal:host-gateway" \
-    -e DATABASE_HOST="host.docker.internal" \
-    -e RPC_HOST="host.docker.internal" \
-    -p 3000:3000 \
-    tracker:latest
+        echo "安装依赖并编译项目..."
+        sudo yarn install
+        sudo yarn build
 
-# 创建钱包
-echo "创建钱包..."
-cd packages/cli
+        echo "运行 Fractal 节点..."
+        cd ./packages/tracker/
+        sudo chmod 777 docker/data
+        sudo chmod 777 docker/pgdata
+        sudo docker-compose up -d
 
-# 创建 config.json 文件并添加配置信息
-echo "创建 config.json 文件..."
-cat <<EOL > config.json
+        cd ../../
+        sudo docker build -t tracker:latest .
+
+        echo "运行本地索引器..."
+        sudo docker run -d \
+            --name tracker \
+            --add-host="host.docker.internal:host-gateway" \
+            -e DATABASE_HOST="host.docker.internal" \
+            -e RPC_HOST="host.docker.internal" \
+            -p 3000:3000 \
+            tracker:latest
+
+        echo "创建钱包..."
+        cd packages/cli
+
+        echo "创建 config.json 文件..."
+        cat <<EOL > config.json
 {
   "network": "fractal-mainnet",
   "tracker": "http://127.0.0.1:3000",
@@ -78,15 +93,14 @@ cat <<EOL > config.json
 }
 EOL
 
-# 创建新钱包
-sudo yarn cli wallet create
+        sudo yarn cli wallet create
 
-# 提示用户创建完成
-echo "钱包创建成功，请记住助记词！"
+        read -p "请确认您已保存好钱包助记词，然后按任意键继续..."
 
-# 创建重复铸造的脚本
-echo "创建重复铸造脚本..."
-cat <<EOL > script.sh
+        echo "钱包创建成功，请记住助记词！"
+
+        echo "创建重复铸造脚本..."
+        cat <<EOL > script.sh
 #!/bin/bash
 
 command="sudo yarn cli mint -i 45ee725c2c5993b3e4d308842d87e973bf1951f5f7a804b21e4dd964ecd12d6b_0 5"
@@ -103,16 +117,24 @@ while true; do
 done
 EOL
 
-# 给予脚本执行权限
-chmod +x script.sh
+        chmod +x script.sh
 
-# 使用 screen 启动 script.sh 脚本
-echo "在后台运行 mint 脚本..."
-screen -S mint_session -dm ./script.sh
+        echo "在后台运行 mint 铸造脚本..."
+        screen -S mint_session -dm ./script.sh
 
-# 提示用户 screen 会话已启动
-echo "Screen 会话 'mint_session' 已启动，您可以随时通过 'screen -r mint_session' 连接到该会话。"
-echo "如果要退出会话但保持脚本运行，按 Ctrl+A 然后按 D。"
+        echo "Screen 会话 'mint_session' 已启动，您可以随时通过 'screen -r mint_session' 连接到该会话。"
+        echo "如果要退出会话但保持脚本运行，按 Ctrl+A 然后按 D。"
 
-# 脚本结束
-echo "部署完成！"
+        echo -e "${GREEN}一键安装和铸造操作完成！${NC}"
+        ;;
+    2)
+        echo "重启铸造窗口..."
+
+        cd "$HOME/cat-token-box/packages/cli"
+        screen -S mint_session -dm ./script.sh
+        echo "铸造窗口已重启。"
+        ;;
+    *)
+        echo -e "${RED}无效的选项。请重新运行脚本并选择一个有效的选项。${NC}"
+        ;;
+esac
