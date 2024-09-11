@@ -13,8 +13,9 @@ echo -e "${CYAN}**  自动安装并启动 Fractal 主网节点和铸造工具 **
 echo -e "${CYAN}*********************************************${NC}"
 echo ""
 echo -e "${YELLOW}欢迎使用 CAT Token Box 自动部署脚本${NC}"
-echo "该脚本将帮助您快速安装和配置必要的工具，包括 Docker、Node.js、yarn 等。"
-echo "此外，您可以选择重启铸造窗口以继续操作。"
+echo "1，该脚本将帮助您快速安装和配置必要的工具，包括 Docker、Node.js、yarn 等。"
+echo "2，您可以选择重启铸造窗口以继续操作。"
+echo "特别鸣谢：----YIMING----RUN----"
 echo ""
 echo -e "${GREEN}请选择一个功能：${NC}"
 
